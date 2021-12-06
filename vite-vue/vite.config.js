@@ -4,6 +4,7 @@ import { resolve } from 'path'
 
 // vite.config.js
 export default defineConfig({
+	publicDir: '/',
 	plugins: [
 		createVuePlugin({
 			vueTemplateOptions: {},
@@ -28,4 +29,8 @@ export default defineConfig({
 			},
 		},
 	},
+	//生产模式打包配置
+	// build: {
+	// 	outDir: 'dist', //Specify the output directory (relative to project root).
+	// },
 })
