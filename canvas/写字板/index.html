@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			body,
+			html {
+				width: 100%;
+				height: 100vh;
+			}
+		</style>
+		<script src="./canvastoImg.js"></script>
+	</head>
+	<body>
+		<canvas id="canvas"
+			>你的浏览器不支持canvas,请升级浏览器版本或使用其他浏览器</canvas
+		>
+		<p>ctrl+Z&nbsp;撤回上一步</p>
+		<p>ctrl+Y&nbsp;下一步</p>
+		<button onclick="educe()">导出画布为图片</button>
+
+		<script>
+			let plugs = new CanvasToImg('canvas', {
+				width: document.body.clientWidth,
+				height: document.body.clientHeight - 100,
+			})
+			// 适配移动端 pc端的写字板 全屏写字板 width和height自己设置 默认为canvas大小300 150
+
+			function educe() {
+				let link = document.createElement('a')
+				link.href = canvas.toDataURL('image/png')
+				link.download = 'download'
+				link.click()
+			}
+		</script>
+	</body>
+</html>

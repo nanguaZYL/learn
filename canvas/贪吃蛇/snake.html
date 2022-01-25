@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<p>点击画布开始</p>
+		<script>
+			class Snake {
+				constructor(
+					name,
+					{
+						width = 600, //画布宽度
+						height = 400, //画布长度
+						size = 20, //格子大小
+						diff = 5, //难度 默认5
+						full = false, //是否canvas默认全屏
+						src,
+					} = {}
+				) {
+					this.canvas = document.getElementById(name)
+					this.ctx = this.canvas.getContext('2d')
+					this.CW = full ? window.innerWidth : width //整个画布宽度
+					this.CH = full ? window.innerHeight : height //整个画布高度
+					this.size = size ? Number(size) : 20 //定义宽高的长度
+					this.distance = [{ x: 0, y: 0 }] //定义头部的坐标位置
+					this.direction = 'd' //定义前进的方向
+					this.speed = size ? Number(size) : 20 //行进速度
+					this.diff = 1000 / Number(diff)
+					this.Fruit = this.decide() //设置果实的地址
+					this.BGSrc = ''
+					if (src) {
+						let img = new Image()
+						img.src = src
+						this.BGSrc = img
+					}
+					this.status = 'end' //游戏状态 pedding 和 end
+					this.setBG()
+					this.render()
+					this.setMonitor()
+					// 点的大小
+				}
+				// 设置canvas的大小 全屏 或者给定宽高
+				setBG() {
+					this.canvas.width = this.CW
+					this.canvas.height = this.CH
+					this.canvas.style.display = 'block'
+					// 如果有背景图片渲染背景图片
+					if (this.BGSrc) {
+						this.ctx.drawImage(this.BGSrc, 0, 0, this.CW, this.CH)
+					} else {
+						this.ctx.fillStyle = '#f4f4f4'
+						this.ctx.fillRect(0, 0, this.CW, this.CH)
+					}
+				}
+				// 画主体
+				render() {
+					let { distance, ctx, CW, CH, Fruit, size } = this
+					ctx.clearRect(0, 0, CW, CH)
+					this.setBG()
+					// 设置果实
+					ctx.beginPath()
+					ctx.rect(Fruit.x, Fruit.y, size, size)
+					ctx.fillStyle = '#FF2214'
+					ctx.fill()
+					// 画蛇本体  第一种正序画法
+					// distance.forEach((item, index) => {
+					// 	ctx.beginPath()
+					// 	if (index == 0) {
+					// 		ctx.rect(item.x, item.y, size, size)
+					// 		ctx.fillStyle = '#FF9014'
+					// 		ctx.fill()
+					// 	} else {
+					// 		ctx.rect(item.x, item.y, size, size)
+					// 		ctx.fillStyle = '#FF9014'
+					// 		ctx.fill()
+					// 	}
+					// })
+					// 第二种倒序画法
+					for (let i = distance.length - 1; i >= 0; i--) {
+						let item = distance[i]
+						ctx.beginPath()
+						ctx.rect(item.x, item.y, size, size)
+						ctx.fillStyle = '#FF9014'
+						ctx.fill()
+					}
+					return this
+				}
+				// 开始
+				start() {
+					this.Timer = Date.now()
+					this.status = 'pedding'
+					this.move()
+					return this
+				}
+				// 移动
+				move() {
+					if (Date.now() - this.Timer > this.diff) {
+						this.Timer = Date.now()
+						switch (this.direction) {
+							case 'w':
+								this.changePosition('y', -this.speed)
+								break
+							case 's':
+								this.changePosition('y', this.speed)
+								break
+							case 'a':
+								this.changePosition('x', -this.speed)
+								break
+							case 'd':
+								this.changePosition('x', this.speed)
+								break
+						}
+					}
+					this.render()
+					requestAnimationFrame(() => {
+						if (this.status == 'end') {
+							this.restart()
+							return
+						}
+						this.move()
+					})
+				}
+				// 路径移动
+				changePosition(directives, num) {
+					if (this.distance.length > 1) {
+						//当身体有多段时
+						this.distance.reduce((pre, item, index) => {
+							let clone = this.deepClone(item)
+							if (index == 0) item[directives] += num
+							else this.distance[index] = this.deepClone(pre)
+							return clone
+						}, this.distance[0])
+					} else {
+						this.distance[0][directives] += num
+					}
+					this.eatFruit()
+					this.confine()
+					if (this.coincide()) this.end()
+				}
+				// 边界处理
+				confine() {
+					if (this.status == 'end') return
+					let { distance, size, CW, CH } = this
+					Object.keys(distance[0]).forEach((i) => {
+						let num = i == 'x' ? CW : CH
+						if (distance[0][i] + size >= num) {
+							distance[0][i] = num - size
+							this.end()
+						}
+						if (distance[0][i] < 0) {
+							distance[0][i] = 0
+							this.end()
+						}
+					})
+				}
+				// 因为数据比较简单 所有使用JSON序列化来实现深拷贝
+				deepClone(item) {
+					return typeof item == 'object'
+						? JSON.parse(JSON.stringify(item))
+						: item
+				}
+				// 吃到果实的处理
+				eatFruit() {
+					let { distance, Fruit } = this
+					if (distance[0].x == Fruit.x && distance[0].y == Fruit.y) {
+						this.Fruit = this.decide()
+						requestAnimationFrame(() => {
+							this.distance.push({
+								x: distance[0].x,
+								y: distance[0].y,
+							})
+						})
+					}
+				}
+				// 死亡机制 碰墙死亡(边界处理已实现) 吃到自己身体时死亡
+				// 判断是够头和身体重合
+				coincide() {
+					if (this.status == 'end') return false
+					let opt = this.distance
+					let flog = false
+					for (let i = 0; i < opt.length; i++) {
+						if (i != 0) {
+							if (opt[i].x == opt[0].x && opt[i].y == opt[0].y) {
+								flog = true
+								break
+							}
+						}
+					}
+					return flog
+				}
+				// 结束游戏
+				end() {
+					this.status = 'end'
+					alert('游戏失败')
+					return this
+				}
+				// 设置监听器
+				setMonitor() {
+					//还需添加移动方向是否为自己身体的判断
+					this.$on('keydown', (e) => {
+						if (this.status != 'pedding') return
+						let arr = ['w', 's', 'a', 'd']
+						if (arr.indexOf(e.key) != -1) {
+							if (this.distance.length == 1) {
+								this.direction = e.key
+								return
+							}
+							// 当蛇长度超过1时无法直接掉头
+							switch (this.snakeUp()) {
+								case 'w':
+									this.direction = e.key == 's' ? 'w' : e.key
+									break
+								case 's':
+									this.direction = e.key == 'w' ? 's' : e.key
+									break
+								case 'a':
+									this.direction = e.key == 'd' ? 'a' : e.key
+									break
+								case 'd':
+									this.direction = e.key == 'a' ? 'd' : e.key
+									break
+								default:
+									this.direction = e.key
+									break
+							}
+						}
+					})
+
+					this.$on(
+						'click',
+						(e) => {
+							if (this.status == 'end') this.start()
+						},
+						this.canvas
+					)
+				}
+				// 判断蛇的移动方向
+				snakeUp() {
+					let to = this.distance[0]
+					let from = this.distance[1]
+					let X = to.x - from.x
+					let Y = to.y - from.y
+					return X
+						? X > 0
+							? 'd'
+							: 'a'
+						: Y
+						? Y > 0
+							? 's'
+							: 'w'
+						: ''
+				}
+				// 监听器
+				$on(name, cb, dom) {
+					if (dom) dom.addEventListener(name, (e) => cb(e))
+					else window.addEventListener(name, (e) => cb(e))
+				}
+				// 获取画布内的随机点
+				getRandom() {
+					let { CW, CH, size } = this
+					let x = Math.floor(Math.random() * CW)
+					let y = Math.floor(Math.random() * CH)
+					x = x >= CW - size ? CW - size : x
+					y = y >= CH - size ? CH - size : y
+					if (x && x % size != 0) x = Math.floor(x / size) * size
+					if (y && y % size != 0) y = Math.floor(y / size) * size
+					return { x, y }
+				}
+				// 判断随机点是否跟身体点重合
+				decide() {
+					let num = this.getRandom()
+					let flog = false
+					for (let i = 0; i < this.distance.length; i++) {
+						if (
+							this.distance[i].x == num.x &&
+							this.distance[i].y == num.y
+						)
+							flog = true
+					}
+					if (flog) return this.decide()
+					return num
+				}
+				// 重置
+				restart() {
+					this.distance = [{ x: 0, y: 0 }] //定义头部的坐标位置
+					this.direction = 's' //定义前进的方向
+					this.render()
+					return this
+				}
+			}
+
+			// 创建贪吃蛇 第一个参数是canvas的id 第二个参数是配置项的对象 配置项都有默认值 第二份参数皆可不填 直接 new Snake('canvas的id')即可
+			new Snake('canvas', {
+				width: 700, //设置画布宽度
+				height: 800, //设置画布长
+				// full: true, //设置该属性则宽高失效 默认使用窗口的宽高，
+				// src: '', //背景图片地址 设置该属性可将画布背景更换为设置的图片 该参数跟普通图片地址一样
+				// size: '', //格子大小 默认为20
+				// diff: 5, //游戏难度 默认5 数字类型 主要是改变渲染的速度
+			})
+			// 游戏可以通过点击屏幕开始 也可以通过new Snake()调用starr()开始 即 new Snake().start() 结束为new Snake().end() 重开是 new Snake().restart()
+		</script>
+	</body>
+</html>
