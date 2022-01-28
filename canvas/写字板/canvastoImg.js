@@ -160,6 +160,7 @@ class CanvasToImg {
 	// 撤回上一步
 	recall() {
 		if (this.operation.length <= 0) return
+		console.log('这里是撤回')
 		let { cache, operation } = this
 		let item = this.deepClone(operation[operation.length - 1])
 		operation.pop()
@@ -173,7 +174,7 @@ class CanvasToImg {
 		let { cache, operation } = this
 		let item = this.deepClone(cache[0])
 		cache.shift()
-		operation.unshift(item)
+		operation.push(item)
 		this.history = []
 		this.reDraw()
 	}
