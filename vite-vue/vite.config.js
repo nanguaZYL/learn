@@ -14,8 +14,8 @@ export default defineConfig({
 		extensions: ['.vue', '.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
 		alias: {
 			// vue2项目别名一般都是@，vue3中一般使用/@/, 为方便使用
-			'@': resolve('src'),
-			'~@': resolve('src'),
+			'@': resolve(__dirname, 'src'),
+			'~@': resolve(__dirname, 'src'),
 		},
 	},
 	server: {
