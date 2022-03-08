@@ -9,12 +9,9 @@ import {
 
 const routes: Array<RouteRecordRaw> = [
 	{
-		path: '/',
-		redirect: '/Home',
-	},
-	{
 		path: '/Home',
 		component: () => import('../view/home.vue'),
+		alias: '/',
 		meta: {
 			title: '首页',
 		},

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Add from '../components/add.vue'
+// import Add from '../components/add.vue'
 import Axios from '../utils/api'
 import { ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
@@ -22,8 +22,9 @@ function topage() {
 <template>
 	<div @click="topage">跳转登录</div>
 	<div contenteditable>可以输入</div>
-	<Add />
-	<p>这是home</p>
+	<!-- <Add /> -->
 </template>
 
-<style scoped></style>
+<style lang='scss' scoped>
+
+</style>

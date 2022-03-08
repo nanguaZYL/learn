@@ -1,0 +1,9 @@
+{
+  "name": "lit-ui",
+  "version": "1.0.0",
+  "description": "基于uniapp的ui框架",
+  "main": "index.js",
+  "author": "ZYL",
+  "license": "MIT",
+  "private": false
+}
