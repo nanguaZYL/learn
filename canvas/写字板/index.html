@@ -27,6 +27,15 @@
 		<button onclick="educe()">导出画布为图片</button>
 
 		<script>
+			;(function () {
+				var userAgent = navigator.userAgent
+				window.addEventListener('resize', function () {
+					if (navigator.userAgent !== userAgent) {
+						/* eslint-disable no-undef */
+						location.reload()
+					}
+				})
+			})()
 			let plugs = new CanvasToImg('canvas', {
 				width: document.body.clientWidth,
 				height: document.body.clientHeight - 100,
